@@ -28,7 +28,7 @@ baud = args["baud"]
 
 s = serial.Serial(port, baud)
 writer = csv.writer(open(args["output"], "w"))
-header = ["Time Stamp", "Δt", "yadda", "yadda2"]
+header = ["Time Stamp", "Δt", "t/4", "", "BLU", "GRN", "RED", "YELLOW", "SET", "Error"]
 writer.writerow(header)
 t0 = datetime.now()
 
@@ -42,6 +42,8 @@ plt.rcParams["figure.figsize"] = fig_size
 xs = [] #store trials here (n)
 ys = [] #store relative frequency here
 grn = [] #for theoretical probability
+red = []
+yel = []
 plt.style.use("fivethirtyeight")
 
 
@@ -67,24 +69,31 @@ def parse_serial_read(line):
     return parse_list
 
 def plot_data(line):
-    if len(line) is not 13:
+    print (len(line))
+    if len(line) is not 11:
+        return
+    if int(line[1]) < 5:
         return
 
     xs.append(line[1]) #time on x-axis
-    ys.append(float(line[3]))
-    grn.append(float(line[4]))
+    ys.append(float(line[4])) # was 3, BLU
+    #grn.append(float(line[4])) # GRN
+    red.append(float(line[6])) #RED, was 5
+    yel.append(float(line[7]))  #YEL, was 6
 
     plt.subplots_adjust(left=0.35)
     plt.cla()
     plt.title('TVAC Data')
     plt.plot(xs, ys, "b", label="BLU", linewidth=1)
-    plt.plot(xs, grn, "g", label="GRN", linewidth=1)
+    #plt.plot(xs, grn, "g", label="GRN", linewidth=1)
+    plt.plot(xs, red, "r", label="RED", linewidth=1)
+    plt.plot(xs, yel, "y", label="YELLOW", linewidth=1)
     plt.legend()
     plt.xlabel("Time (seconds)")
     plt.ylabel("Temperature (°C)")
 
-    set = "Set Point: " + line[7]
-    error = "Error: " + line[8]
+    set = "Set Point: " + line[8]
+    error = "Error: " + line[9]
 
     plt.text(0.02, 0.45, set, fontsize=14, transform=plt.gcf().transFigure)
     plt.text(0.02, 0.40, error, fontsize=14, transform=plt.gcf().transFigure)
@@ -94,6 +103,8 @@ def plot_data(line):
 try:
     print ("Flushing Serial Data...")
     def animate(i):
+        #if i < 10:
+        #    return
         #get serial data and parse and plot
         line = s.readline().strip()
         line = parse_serial_read(line)
