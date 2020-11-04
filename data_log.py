@@ -42,8 +42,8 @@ plt.style.use("fivethirtyeight")
 # Create lists for data
 deltaT = [] #store trials here (n)
 # Thermocouple lists
-blu = [] #store relative frequency here
-grn = [] #for theoretical probability
+blu = []
+grn = [] 
 red = []
 yel = []
 
@@ -132,8 +132,7 @@ if __name__ == '__main__':
             plot_data(line)
             print (line)
 
-            #else:
-                #sys.stdout.write('\r Waiting ')
+
 
         ani = FuncAnimation(plt.gcf(), animate, interval=1000)
         plt.tight_layout()
@@ -144,14 +143,3 @@ if __name__ == '__main__':
         print("\nterminating...")
         #f.close()
         pass
-
-
-
-
-
-
-#l = l.decode("utf-8")
-        #time = datetime.now()
-        #time = time.strftime("%c")
-        #print (time + "\t" + l)
-        #f.writelines(time + "," + l + "\n")
