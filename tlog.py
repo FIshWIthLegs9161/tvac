@@ -145,8 +145,8 @@ def validate_parse(line):
 # Helper function to plot the parsed data into the figure and write to csv.
 def plot_data(line):
     
-    set = "Set Point: " + line[set_col]
-    error = "Error: " + line[err_col]
+    set = "Set Point: " + str(line[set_col])
+    error = "Error: " + str(line[err_col])
 
     plt.subplots_adjust(left=0.35)
     plt.cla()
@@ -164,8 +164,16 @@ def plot_data(line):
     #print(line)
     try:
         #print(float(line[tc1_col]))
-        tc1.append(float(line[tc1_col]))
-        #plt.plot(deltaT, tc1, "b", label="tc1", linewidth=1)
+        deltaT.append(line[deltaT_col])
+        tc1.append(line[tc1_col])
+        tc2.append(line[tc2_col])
+        tc3.append(line[tc3_col])
+        tc4.append(line[tc4_col])
+        tc5.append(line[tc5_col])
+        tc6.append(line[tc6_col])
+        tc7.append(line[tc7_col])
+        tc8.append(line[tc8_col])
+
     except Exception as e:
         print ("tc1 error: ")
         print(e)
@@ -178,37 +186,37 @@ def plot_data(line):
         print ("tc2 error: ")
         print(e)
     try:
-        tc3.append(float(line[tc3_col]))
+        t
         plt.plot(deltaT, tc3, label="tc3", linewidth=1)
     except Exception as e:
         print ("tc3 error: ")
         print(e)
     try:
-        tc4.append(float(line[tc4_col]))
+        
         plt.plot(deltaT, tc4, label="tc4", linewidth=1)
     except Exception as e:
         print ("tc4 error: ")
         print(e)
     try:
-        tc5.append(float(line[tc5_col]))
+        
         plt.plot(deltaT, tc5, label="tc5", linewidth=1)
     except Exception as e:
         print ("tc5 error: ")
         print(e)
     try:
-        tc6.append(float(line[tc6_col]))
+        
         plt.plot(deltaT, tc6, label="tc6", linewidth=1)
     except Exception as e:
         print ("tc6 error: ")
         print(e)
     try:
-        tc7.append(float(line[tc7_col]))
+        
         plt.plot(deltaT, tc7, label="tc7", linewidth=1)
     except Exception as e:
         print ("tc7 error: ")
         print(e)
     try:
-        tc8.append(float(line[tc8_col]))
+        
         plt.plot(deltaT, tc8, label="tc8", linewidth=1)
     except Exception as e:
         print ("tc8 error: ")
@@ -220,7 +228,7 @@ def plot_data(line):
 
 
     
-    '''
+    
     plt.plot(deltaT, tc1, "b", label="tc1", linewidth=1)
     plt.plot(deltaT, tc2, "g", label="tc2", linewidth=1)
     plt.plot(deltaT, tc3, "r", label="tc3", linewidth=1)
@@ -229,15 +237,15 @@ def plot_data(line):
     plt.plot(deltaT, tc6, "g", label="tc6", linewidth=1)
     plt.plot(deltaT, tc7, "r", label="tc7", linewidth=1)
     plt.plot(deltaT, tc8, "y", label="tc8", linewidth=1)
-   
-
+    
+    
     plt.legend()
     plt.xlabel("Time (seconds)")
     plt.ylabel("Temperature (°C)")
-
+    
     plt.text(0.02, 0.45, set, fontsize=14, transform=plt.gcf().transFigure)
     plt.text(0.02, 0.40, error, fontsize=14, transform=plt.gcf().transFigure)
-    ''' 
+    
     
     # write data to .csv file
     #writer.writerow(line)
@@ -246,24 +254,24 @@ if __name__ == '__main__':
     try:
         print ("Flushing Serial Data...")
         while 1:
-        #def animate(i):
-            #if i < 10:
-            #    return
-            #get serial data and parse and plot
-            line = ser.readline().strip()
-            line = parse_serial_read(line)
-            line = validate_parse(line)
-            if line:
-                print()
+            def animate(i):
+                #if i < 10:
+                #    return
+                #get serial data and parse and plot
+                line = ser.readline().strip()
+                line = parse_serial_read(line)
+                line = validate_parse(line)
+                if line:
+                    print()
+                    plot_data(line)
                 
-            #plot_data(line)
-            #print (line)
-            #print(tc1) 
+                #print (line)
+                #print(tc1) 
+            def animate(i):
 
-
-        #ani = FuncAnimation(plt.gcf(), animate, interval=1000)
-        #plt.tight_layout()
-        #plt.show()
+            ani = FuncAnimation(plt.gcf(), animate, interval=1000)
+            plt.tight_layout()
+            plt.show()
 
 
     except KeyboardInterrupt:
