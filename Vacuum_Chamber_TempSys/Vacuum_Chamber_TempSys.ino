@@ -1,9 +1,9 @@
-#include <PlayingWithFusion_MAX31855_J_correction.h>
-#include <PlayingWithFusion_MAX31855_STRUCT_corr.h>
-#include <PlayingWithFusion_MAX31855_T_correction.h>
-#include <PlayingWithFusion_MAX31855_Wcorr.h>
+#include "PlayingWithFusion_MAX31855_J_correction.h"
+#include "PlayingWithFusion_MAX31855_STRUCT_corr.h"
+#include "PlayingWithFusion_MAX31855_T_correction.h"
+#include "PlayingWithFusion_MAX31855_Wcorr.h"
 
-
+565
 
 
 
@@ -47,7 +47,7 @@ int8_t CS4_PIN =  7;
 int8_t CS3_PIN =  3;
 int8_t CS2_PIN =  4;
 int8_t CS1_PIN =  5;
-int8_t CS0_PIN =  6;
+int8_t CS0_PIN =  7;
 
 
 // pin to relay for heatind element
@@ -63,13 +63,13 @@ PWFusion_MAX31855_TC  thermocouple0(CS0_PIN);
 PWFusion_MAX31855_TC  thermocouple1(CS1_PIN);
 PWFusion_MAX31855_TC  thermocouple2(CS2_PIN);
 PWFusion_MAX31855_TC  thermocouple3(CS3_PIN);
-PWFusion_MAX31855_TC  thermocouple3(CS4_PIN);
-PWFusion_MAX31855_TC  thermocouple3(CS5_PIN);
-PWFusion_MAX31855_TC  thermocouple3(CS6_PIN);
-PWFusion_MAX31855_TC  thermocouple3(CS7_PIN);
+PWFusion_MAX31855_TC  thermocouple4(CS4_PIN);
+PWFusion_MAX31855_TC  thermocouple5(CS5_PIN);
+PWFusion_MAX31855_TC  thermocouple6(CS6_PIN);
+PWFusion_MAX31855_TC  thermocouple7(CS7_PIN);
 
 //names the pin that will send data through the shift register to the LCD.
-LiquidCrystal lcd(0);
+LiquidCrystal lcd(0,0,0,0,0,0);
 int LCD_TC_rot_timer = 0;
 
 //these three values will be used to store the current time at three different points in a cycle of operations.
@@ -380,13 +380,13 @@ void loop() {
 
   static struct var_max31855 TC_CH0 = {0,0,0, 3, 0};
   static struct var_max31855 TC_CH1 = {0,0,0, 3, 0};
-  static struct var_max31855 TC_CH2 = {0,0,0 ,3, 0};
+  static struct var_max31855 TC_CH2 = {0,0,0, 3, 0};
   static struct var_max31855 TC_CH3 = {0,0,0, 3, 0};
   static struct var_max31855 TC_CH4 = {0,0,0, 3, 0};
   static struct var_max31855 TC_CH5 = {0,0,0, 3, 0};
   static struct var_max31855 TC_CH6 = {0,0,0, 3, 0};
   static struct var_max31855 TC_CH7 = {0,0,0, 3, 0};
-  double tmp, primary_temp, thermo_1, thermo_2, thermo_3, thermo_4, thermo_5, thermo_6, thermo_7,;
+  double tmp, primary_temp, thermo_1, thermo_2, thermo_3, thermo_4, thermo_5, thermo_6, thermo_7;
 
   // update TC0
   struct var_max31855 *tc_ptr;
