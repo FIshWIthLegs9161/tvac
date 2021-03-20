@@ -249,31 +249,21 @@ def animate(i):
     plt.plot(deltaT, tc7, "navy", label="tc7", linewidth=2)
     plt.plot(deltaT, tc8, "fuchsia", label="tc8", linewidth=2)
     plt.xticks(rotation=45, ha='right')
-    #fig.tight_layout()
-    plt.subplots_adjust(left=0.25, top = .90, bottom = .10)
-    #plt.subplots_adjust(left=0.35)
-    '''
-    plt.axis('auto')
-    start, end = ax.get_ylim()
-    print (start)
-    print(end)
-    ax.yaxis.set_ticks(np.arange(start, end, 10))
-    '''
 
-    plt.yticks(np.arange(0, 100, 10.0))
+    plt.subplots_adjust(left=0.25, top = .90, bottom = .10)
+    #plt.yticks(np.arange(0, 100, 10.0))
 
     plt.title('TVAC Data')
     plt.xlabel("Time (seconds)")
     plt.ylabel("Temperature (°C)")
-    #plt.axis([1, None, 0, None])
     plt.legend()
-    '''
+    
     box = ax.get_position()
     ax.set_position([box.x0, box.y0 + box.height * 0.15,
                  box.width, box.height * 0.85])
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2),
           fancybox=True, shadow=True, ncol=8)             
-    '''
+    
     #ax.relim()
     #yticks = [0, 150]
     #ax.set_yticks(yticks)
