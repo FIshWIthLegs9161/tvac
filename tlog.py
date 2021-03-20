@@ -4,7 +4,7 @@ import sys
 import argparse
 import serial
 import csv
-from datetime import datetime
+from datetime import datetime, date
 from threading import Thread, Event
 import matplotlib.pyplot as plt
 from itertools import count
@@ -20,31 +20,28 @@ ap.add_argument("-b", "--baud", default="9600",
                 help="baud rate of serial stream, defaults to 9600")
 ap.add_argument("-p", "--port", default="/dev/ttyACM0",
                 help="serial port, defaults to /dev/ttyACM0")
-ap.add_argument("-o", "--output", default="output.csv",
-                help="file name of the output file, defaults to output.csv")
+ap.add_argument("-o", "--output", default=datetime.now().strftime("%m_%d_%Y-%H_%M_%S_")+ "tlog_output.csv",
+                help="file name of the output file, defaults to datetime.now()_tlog_output.csv, file saved to 'logs' dir")
 args = vars(ap.parse_args())
 print(args)
 
 # Setup Serial
 port = args["port"]
 baud = args["baud"]
-#commented out for testing
 ser = serial.Serial(port, baud)
 
 # Setup output file
-writer = csv.writer(open(args["output"], "w"))
+writer = csv.writer(open("logs/" + args["output"], "w"))
 header = ["Time Stamp", "deltaT", "t/4", "TC1", "TC2", "TC3", "TC4", "TC5", "TC6",
           "TC7", "TC8", "SET", "Error", "Int", "Der", "Ontime"]
 writer.writerow(header)
 
 # Create figure for plotting data
-
 fig_size = plt.rcParams["figure.figsize"]
 fig_size[0] = 15
 fig_size[1] = 8
 plt.rcParams["figure.figsize"] = fig_size
 plt.style.use("fivethirtyeight")
-
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
 
@@ -63,7 +60,6 @@ tc7 = []
 tc8 = []
 
 tc_list = [tc1, tc2, tc3, tc4, tc5,tc6,tc7,tc8]
-print (tc_list)
 # Index of the columns for each data type in the parsed serial read
 deltaT_col = 1
 
@@ -87,6 +83,7 @@ t0 = datetime.now()
 line = None
 set_pt = None
 error = None
+
 # Helper function to take the raw serial data and parse it to a list
 def parse_serial_read(line):
     parse_list = []
@@ -115,8 +112,8 @@ def validate_parse(line):
     if len(line) is not 16:
         return False
 
-     # the first several serial reads can be 'corrupted' so discard the first 5
-    if int(line[1]) < 5:
+    # the first several serial reads can be 'corrupted' so discard the first 2
+    if int(line[1]) < 2:
         return
 
     # check last 13 elements for vaild float values, discard if not valid
@@ -161,12 +158,10 @@ def capture_data(x,run_event):
     while run_event.is_set():
         global set_pt
         global error
-        #global line
         time.sleep(.001)
         line = ser.readline().strip()
         line = parse_serial_read(line)
         if validate_parse(line):
-            #print (line)
             deltaT.append(line[deltaT_col])
             tc1.append(float(line[tc1_col]))
             tc2.append(float(line[tc2_col]))
@@ -182,60 +177,6 @@ def capture_data(x,run_event):
 
 
 # Helper function to plot the parsed data into the figure and write to csv.
-def aplot_data(line):
-    
-    set = "Set Point: " + str(line[set_col])
-    error = "Error: " + str(line[err_col])
-
-    plt.text(0.02, 0.45, set, fontsize=14, transform=plt.gcf().transFigure)
-    plt.text(0.02, 0.40, error, fontsize=14, transform=plt.gcf().transFigure)
-
-
-
-    # add data points from line to each list
-    '''
-    try:
-        deltaT.append(line[deltaT_col])
-        #plt.plot(deltaT, tc1, label="tc1", linewidth=1)
-    except Exception as e:
-        print(e)
-    '''
-    #print(line)
-    try:
-        #print(float(line[tc1_col]))
-        pass
-
-    except Exception as e:
-        print ("tc1 error: ")
-        print(e)
-
- 
-    
-    plt.plot(deltaT, tc1, "b", label="tc1", linewidth=1)
-    plt.plot(deltaT, tc2, "g", label="tc2", linewidth=1)
-    plt.plot(deltaT, tc3, "r", label="tc3", linewidth=1)
-    plt.plot(deltaT, tc4, "y", label="tc4", linewidth=1)
-    plt.plot(deltaT, tc5, "b", label="tc5", linewidth=1)
-    plt.plot(deltaT, tc6, "g", label="tc6", linewidth=1)
-    plt.plot(deltaT, tc7, "r", label="tc7", linewidth=1)
-    plt.plot(deltaT, tc8, "y", label="tc8", linewidth=1)
-    
-    
-
-    
-    # write data to .csv file
-    #writer.writerow(line)
-
-def plot_data(x,run_event):
-    while run_event.is_set():
-            global tc_list
-            global plt
-            plt.cla()
-            time.sleep(2)
-            #n = 3
-            #list2 = [sum(tc_list[0][i:i+n])//n for i in range(0,len(tc_list[0]),n)]
-            #print(list2)
-            
 
 def animate(i):
     ax.clear()
@@ -248,6 +189,7 @@ def animate(i):
     plt.plot(deltaT, tc6, "cyan", label="tc6", linewidth=2)
     plt.plot(deltaT, tc7, "navy", label="tc7", linewidth=2)
     plt.plot(deltaT, tc8, "fuchsia", label="tc8", linewidth=2)
+    
     plt.xticks(rotation=45, ha='right')
 
     plt.subplots_adjust(left=0.25, top = .90, bottom = .10)
@@ -261,21 +203,14 @@ def animate(i):
     box = ax.get_position()
     ax.set_position([box.x0, box.y0 + box.height * 0.15,
                  box.width, box.height * 0.85])
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2),
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.17),
           fancybox=True, shadow=True, ncol=8)             
     
-    #ax.relim()
-    #yticks = [0, 150]
-    #ax.set_yticks(yticks)
-
-    if set_pt is not None:
-        plt.text(0.02, 0.45, set_pt, fontsize=14, transform=plt.gcf().transFigure)
-    if error is not None:
-        plt.text(0.02, 0.40, error, fontsize=14, transform=plt.gcf().transFigure)
-    
+    plt.text(0.02, 0.45, set_pt, fontsize=14, transform=plt.gcf().transFigure)     
+    plt.text(0.02, 0.40, error, fontsize=14, transform=plt.gcf().transFigure)
     plt.text(0.02, 0.90, "Press 'q' to Quit", fontsize=14, transform=plt.gcf().transFigure)
     
-def onclick(event):
+def on_key_press(event):
     if event.key in ['Q', 'q']:
         run_event.clear()
         t1.join()
@@ -291,20 +226,14 @@ if __name__ == '__main__':
     t1.start()
     print ("Flushing Serial Data...")
     time.sleep(1)
-    cid = fig.canvas.mpl_connect('key_press_event', onclick)
+    cid = fig.canvas.mpl_connect('key_press_event', on_key_press)
     try:  
-        
-        #capture_data()
         ani = FuncAnimation(fig, animate, interval=1000)
-        #print(tc1)
         plt.tight_layout()
-        #plt.axis('auto')
         plt.show()
 
-        
     except KeyboardInterrupt:
         run_event.clear()
         t1.join()
         print("\nTerminating...")
-        #f.close()
         pass
