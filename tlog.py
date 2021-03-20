@@ -12,6 +12,7 @@ import pandas as pd
 from matplotlib.animation import FuncAnimation
 import time
 import numpy as np
+import os
 
 
 # Parse command line args
@@ -31,7 +32,8 @@ baud = args["baud"]
 ser = serial.Serial(port, baud)
 
 # Setup output file
-writer = csv.writer(open("logs/" + args["output"], "w"))
+log_path = os.path.dirname(os.path.realpath(__file__)) + "/logs/"
+writer = csv.writer(open(log_path + args["output"], "w"))
 header = ["Time Stamp", "deltaT", "t/4", "TC1", "TC2", "TC3", "TC4", "TC5", "TC6",
           "TC7", "TC8", "SET", "Error", "Int", "Der", "Ontime"]
 writer.writerow(header)
@@ -228,7 +230,7 @@ if __name__ == '__main__':
     time.sleep(1)
     cid = fig.canvas.mpl_connect('key_press_event', on_key_press)
     try:  
-        ani = FuncAnimation(fig, animate, interval=1000)
+        ani = FuncAnimation(fig, animate, interval=3000)
         plt.tight_layout()
         plt.show()
 
