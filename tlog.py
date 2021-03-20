@@ -13,7 +13,6 @@ from matplotlib.animation import FuncAnimation
 import time
 import numpy as np
 
-#https://learn.sparkfun.com/tutorials/graph-sensor-data-with-python-and-matplotlib/all
 
 # Parse command line args
 ap = argparse.ArgumentParser()
@@ -53,7 +52,6 @@ ax = fig.add_subplot(1, 1, 1)
 
 # Create lists for data
 deltaT = []
-
 # Thermocouple lists
 tc1 = []
 tc2 = []
@@ -73,10 +71,10 @@ tc1_col = 3
 tc2_col = 4
 tc3_col = 5
 tc4_col = 6
-tc5_col = 10 #7
-tc6_col = 9 #8
-tc7_col = 8 #9
-tc8_col = 7 #10
+tc5_col = 10 
+tc6_col = 9 
+tc7_col = 8 
+tc8_col = 7 
 set_col = 11
 err_col = 12
 
@@ -117,6 +115,10 @@ def validate_parse(line):
     if len(line) is not 16:
         return False
 
+     # the first several serial reads can be 'corrupted' so discard the first 5
+    if int(line[1]) < 5:
+        return
+
     # check last 13 elements for vaild float values, discard if not valid
     valid_line = line[-13:]
     for i in range(len(valid_line)):
@@ -150,8 +152,7 @@ def validate_parse(line):
         print(x, end="\t")
     print()
     
-    
-    # write line to csv file
+
     writer.writerow(valid_line)
     return (valid_line)
   
@@ -160,20 +161,21 @@ def capture_data(x,run_event):
     while run_event.is_set():
         global set_pt
         global error
+        #global line
         time.sleep(.001)
         line = ser.readline().strip()
         line = parse_serial_read(line)
         if validate_parse(line):
-            
+            #print (line)
             deltaT.append(line[deltaT_col])
-            tc1.append((line[tc1_col]))
-            tc2.append(line[tc2_col])
-            tc3.append(line[tc3_col])
-            tc4.append(line[tc4_col])
-            tc5.append(line[tc5_col])
-            tc6.append(line[tc6_col])
-            tc7.append(line[tc7_col])
-            tc8.append(line[tc8_col])
+            tc1.append(float(line[tc1_col]))
+            tc2.append(float(line[tc2_col]))
+            tc3.append(float(line[tc3_col]))
+            tc4.append(float(line[tc4_col]))
+            tc5.append(float(line[tc5_col]))
+            tc6.append(float(line[tc6_col]))
+            tc7.append(float(line[tc7_col]))
+            tc8.append(float(line[tc8_col]))
 
             set_pt = "Set Point: " + str(line[set_col])
             error = "Error: " + str(line[err_col])
@@ -238,17 +240,27 @@ def plot_data(x,run_event):
 def animate(i):
     ax.clear()
     plt.cla()
-    plt.plot(deltaT, tc1, "b", label="tc1", linewidth=1)
-    plt.plot(deltaT, tc2, "g", label="tc2", linewidth=1)
-    plt.plot(deltaT, tc3, "r", label="tc3", linewidth=1)
-    plt.plot(deltaT, tc4, "y", label="tc4", linewidth=1)
-    plt.plot(deltaT, tc5, "b", label="tc5", linewidth=1)
-    plt.plot(deltaT, tc6, "g", label="tc6", linewidth=1)
-    plt.plot(deltaT, tc7, "r", label="tc7", linewidth=1)
-    plt.plot(deltaT, tc8, "y", label="tc8", linewidth=1)
+    plt.plot(deltaT, tc1, "black", label="tc1", linewidth=2)
+    plt.plot(deltaT, tc2, "red", label="tc2", linewidth=2)
+    plt.plot(deltaT, tc3, "orangered", label="tc3", linewidth=2)
+    plt.plot(deltaT, tc4, "gold", label="tc4", linewidth=2)
+    plt.plot(deltaT, tc5, "green", label="tc5", linewidth=2)
+    plt.plot(deltaT, tc6, "cyan", label="tc6", linewidth=2)
+    plt.plot(deltaT, tc7, "navy", label="tc7", linewidth=2)
+    plt.plot(deltaT, tc8, "fuchsia", label="tc8", linewidth=2)
     plt.xticks(rotation=45, ha='right')
     #fig.tight_layout()
-    plt.subplots_adjust(left=0.35, top = .95, bottom = .05, right= .80)
+    plt.subplots_adjust(left=0.25, top = .90, bottom = .10)
+    #plt.subplots_adjust(left=0.35)
+    '''
+    plt.axis('auto')
+    start, end = ax.get_ylim()
+    print (start)
+    print(end)
+    ax.yaxis.set_ticks(np.arange(start, end, 10))
+    '''
+
+    plt.yticks(np.arange(0, 100, 10.0))
 
     plt.title('TVAC Data')
     plt.xlabel("Time (seconds)")
@@ -271,9 +283,13 @@ def animate(i):
     if error is not None:
         plt.text(0.02, 0.40, error, fontsize=14, transform=plt.gcf().transFigure)
     
-    plt.text(0.02, 0.90, "Press Q to Quit", fontsize=14, transform=plt.gcf().transFigure)
+    plt.text(0.02, 0.90, "Press 'q' to Quit", fontsize=14, transform=plt.gcf().transFigure)
     
-
+def onclick(event):
+    if event.key in ['Q', 'q']:
+        run_event.clear()
+        t1.join()
+        print("\nTerminating...")
 
 
 if __name__ == '__main__':
@@ -285,19 +301,20 @@ if __name__ == '__main__':
     t1.start()
     print ("Flushing Serial Data...")
     time.sleep(1)
+    cid = fig.canvas.mpl_connect('key_press_event', onclick)
     try:  
         
         #capture_data()
         ani = FuncAnimation(fig, animate, interval=1000)
         #print(tc1)
         plt.tight_layout()
-        plt.axis('auto')
+        #plt.axis('auto')
         plt.show()
 
         
     except KeyboardInterrupt:
         run_event.clear()
         t1.join()
-        print("\nterminating...")
+        print("\nTerminating...")
         #f.close()
         pass
