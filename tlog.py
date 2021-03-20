@@ -85,7 +85,7 @@ t0 = datetime.now()
 line = None
 set_pt = None
 error = None
-
+count = 0
 # Helper function to take the raw serial data and parse it to a list
 def parse_serial_read(line):
     parse_list = []
@@ -163,16 +163,19 @@ def capture_data(x,run_event):
         time.sleep(.001)
         line = ser.readline().strip()
         line = parse_serial_read(line)
+        global count
+        count += 1
         if validate_parse(line):
-            deltaT.append(line[deltaT_col])
-            tc1.append(float(line[tc1_col]))
-            tc2.append(float(line[tc2_col]))
-            tc3.append(float(line[tc3_col]))
-            tc4.append(float(line[tc4_col]))
-            tc5.append(float(line[tc5_col]))
-            tc6.append(float(line[tc6_col]))
-            tc7.append(float(line[tc7_col]))
-            tc8.append(float(line[tc8_col]))
+            if count % 40 is 0:  
+                deltaT.append(line[deltaT_col])
+                tc1.append(float(line[tc1_col]))
+                tc2.append(float(line[tc2_col]))
+                tc3.append(float(line[tc3_col]))
+                tc4.append(float(line[tc4_col]))
+                tc5.append(float(line[tc5_col]))
+                tc6.append(float(line[tc6_col]))
+                tc7.append(float(line[tc7_col]))
+                tc8.append(float(line[tc8_col])) 
 
             set_pt = "Set Point: " + str(line[set_col])
             error = "Error: " + str(line[err_col])
