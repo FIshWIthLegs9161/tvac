@@ -5,12 +5,13 @@ import argparse
 import serial
 import csv
 from datetime import datetime
-from threading import Thread
+from threading import Thread, Event
 import matplotlib.pyplot as plt
 from itertools import count
 import pandas as pd
 from matplotlib.animation import FuncAnimation
 import time
+import numpy as np
 
 #https://learn.sparkfun.com/tutorials/graph-sensor-data-with-python-and-matplotlib/all
 
@@ -28,6 +29,7 @@ print(args)
 # Setup Serial
 port = args["port"]
 baud = args["baud"]
+#commented out for testing
 ser = serial.Serial(port, baud)
 
 # Setup output file
@@ -37,17 +39,16 @@ header = ["Time Stamp", "deltaT", "t/4", "TC1", "TC2", "TC3", "TC4", "TC5", "TC6
 writer.writerow(header)
 
 # Create figure for plotting data
+
 fig_size = plt.rcParams["figure.figsize"]
 fig_size[0] = 15
 fig_size[1] = 8
 plt.rcParams["figure.figsize"] = fig_size
 plt.style.use("fivethirtyeight")
-plt.subplots_adjust(left=0.35)
-plt.cla()
-plt.title('TVAC Data')
-plt.legend()
-plt.xlabel("Time (seconds)")
-plt.ylabel("Temperature (°C)")
+
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1)
+
 
 
 # Create lists for data
@@ -85,6 +86,9 @@ tc_cols = [tc1_col,tc2_col,tc3_col,tc4_col,
 # Used to compute deltaT
 t0 = datetime.now()
 
+line = None
+set_pt = None
+error = None
 # Helper function to take the raw serial data and parse it to a list
 def parse_serial_read(line):
     parse_list = []
@@ -136,6 +140,7 @@ def validate_parse(line):
     valid_line = line[:3] + valid_line
 
 
+    #commented out for testing
     print ("Parse success:")
         
     for x in header[1:]:
@@ -144,33 +149,38 @@ def validate_parse(line):
     for x in valid_line[1:]:
         print(x, end="\t")
     print()
-   
+    
     
     # write line to csv file
     writer.writerow(valid_line)
     return (valid_line)
   
 
-def capture_data():
-    line = ser.readline().strip()
-    line = parse_serial_read(line)
-    if validate_parse(line):
-        for i in range(len(tc_cols)):
-            tc_list[i].append(line[i])
-        '''
-        deltaT.append(line[deltaT_col])
-        tc1.append(line[tc1_col])
-        tc2.append(line[tc2_col])
-        tc3.append(line[tc3_col])
-        tc4.append(line[tc4_col])
-        tc5.append(line[tc5_col])
-        tc6.append(line[tc6_col])
-        tc7.append(line[tc7_col])
-        tc8.append(line[tc8_col])
-        '''
+def capture_data(x,run_event):
+    while run_event.is_set():
+        global set_pt
+        global error
+        time.sleep(.001)
+        line = ser.readline().strip()
+        line = parse_serial_read(line)
+        if validate_parse(line):
+            
+            deltaT.append(line[deltaT_col])
+            tc1.append((line[tc1_col]))
+            tc2.append(line[tc2_col])
+            tc3.append(line[tc3_col])
+            tc4.append(line[tc4_col])
+            tc5.append(line[tc5_col])
+            tc6.append(line[tc6_col])
+            tc7.append(line[tc7_col])
+            tc8.append(line[tc8_col])
+
+            set_pt = "Set Point: " + str(line[set_col])
+            error = "Error: " + str(line[err_col])
+
 
 # Helper function to plot the parsed data into the figure and write to csv.
-def plot_data(line):
+def aplot_data(line):
     
     set = "Set Point: " + str(line[set_col])
     error = "Error: " + str(line[err_col])
@@ -214,42 +224,80 @@ def plot_data(line):
     # write data to .csv file
     #writer.writerow(line)
 
-if __name__ == '__main__':
-    try:
-        print ("Flushing Serial Data...")
-        '''
-        thread1 = Thread(target=capture_data, args("Thread 1"))
-        thread1.join()
-        '''
-        
-        while 1:
-            capture_data()
+def plot_data(x,run_event):
+    while run_event.is_set():
+            global tc_list
+            global plt
+            plt.cla()
+            time.sleep(2)
+            #n = 3
+            #list2 = [sum(tc_list[0][i:i+n])//n for i in range(0,len(tc_list[0]),n)]
+            #print(list2)
             
-            
-            
-            '''
-            def animate(i):
-                pass
-                #if i < 10:
-                #    return
-                #get serial data and parse and plot
-                #line = ser.readline().strip()
-                #line = parse_serial_read(line)
-                #line = validate_parse(line)
-                #if line:
-                 #   print()
-                  #  plot_data(line)
-                
-                #print (line)
-                #print(tc1) 
-           
 
-            ani = FuncAnimation(plt.gcf(), animate, interval=250)
-            plt.tight_layout()
-            plt.show()
-            '''
+def animate(i):
+    ax.clear()
+    plt.cla()
+    plt.plot(deltaT, tc1, "b", label="tc1", linewidth=1)
+    plt.plot(deltaT, tc2, "g", label="tc2", linewidth=1)
+    plt.plot(deltaT, tc3, "r", label="tc3", linewidth=1)
+    plt.plot(deltaT, tc4, "y", label="tc4", linewidth=1)
+    plt.plot(deltaT, tc5, "b", label="tc5", linewidth=1)
+    plt.plot(deltaT, tc6, "g", label="tc6", linewidth=1)
+    plt.plot(deltaT, tc7, "r", label="tc7", linewidth=1)
+    plt.plot(deltaT, tc8, "y", label="tc8", linewidth=1)
+    plt.xticks(rotation=45, ha='right')
+    #fig.tight_layout()
+    plt.subplots_adjust(left=0.35, top = .95, bottom = .05, right= .80)
+
+    plt.title('TVAC Data')
+    plt.xlabel("Time (seconds)")
+    plt.ylabel("Temperature (°C)")
+    #plt.axis([1, None, 0, None])
+    plt.legend()
+    '''
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0 + box.height * 0.15,
+                 box.width, box.height * 0.85])
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+          fancybox=True, shadow=True, ncol=8)             
+    '''
+    #ax.relim()
+    #yticks = [0, 150]
+    #ax.set_yticks(yticks)
+
+    if set_pt is not None:
+        plt.text(0.02, 0.45, set_pt, fontsize=14, transform=plt.gcf().transFigure)
+    if error is not None:
+        plt.text(0.02, 0.40, error, fontsize=14, transform=plt.gcf().transFigure)
+    
+    plt.text(0.02, 0.90, "Press Q to Quit", fontsize=14, transform=plt.gcf().transFigure)
+    
+
+
+
+if __name__ == '__main__':
+
+    run_event = Event()
+    run_event.set()
+    t1 = Thread(target=capture_data, args=("thread name", run_event))
+    t1.daemon = True
+    t1.start()
+    print ("Flushing Serial Data...")
+    time.sleep(1)
+    try:  
+        
+        #capture_data()
+        ani = FuncAnimation(fig, animate, interval=1000)
+        #print(tc1)
+        plt.tight_layout()
+        plt.axis('auto')
+        plt.show()
+
         
     except KeyboardInterrupt:
+        run_event.clear()
+        t1.join()
         print("\nterminating...")
         #f.close()
         pass
